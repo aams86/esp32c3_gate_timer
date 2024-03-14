@@ -1,10 +1,12 @@
 #include <esp_timer.h>  // Make sure to include this for esp_timer_get_time()
 #include <Arduino.h>
 
-#define TOGGLE_PIN 2  // Pin to toggle in ISR
-#define CONTROL_PIN 4 // Pin to control based on button press
-#define INPUT_PIN 5   // Button input pin
-
+#define TOGGLE_PIN1   D0  // Pin to toggle in ISR
+#define TOGGLE_PIN2   D1  // Pin to toggle in ISR
+#define CONTROL_PIN1   D9 // Pin to control based on button press
+#define CONTROL_PIN2   D8 // Pin to control based on button press
+#define INPUT_PIN1     D5   // Button input pin
+#define INPUT_PIN2     D6   // Button input pin
 
 
 typedef enum timer_state_t {
@@ -23,24 +25,25 @@ hw_timer_t * timer = NULL;
 
 void IRAM_ATTR onTimer() {
   toggleState = !toggleState;  // Toggle the state
-  digitalWrite(TOGGLE_PIN, toggleState); // Toggle the pin
+  digitalWrite(TOGGLE_PIN1, toggleState); // Toggle the pin
+  digitalWrite(TOGGLE_PIN2, !toggleState); // Toggle the pin
 }
 
-void IRAM_ATTR handleButtonPress() {
+void IRAM_ATTR handleGate1() {
   // Directly set CONTROL_PIN to match the INPUT_PIN state
   // Note: INPUT_PIN state is read immediately after the button press; debouncing is not handled here.
   gate1_triggered_time = esp_timer_get_time();
-  bool inputState = digitalRead(INPUT_PIN);
-  digitalWrite(CONTROL_PIN, inputState);
+  bool inputState = digitalRead(INPUT_PIN1);
+  digitalWrite(CONTROL_PIN1, inputState);
   
 }
 
-void IRAM_ATTR handleButtonPress2() {
+void IRAM_ATTR handleGate2() {
   // Directly set CONTROL_PIN to match the INPUT_PIN state
   // Note: INPUT_PIN state is read immediately after the button press; debouncing is not handled here.
   gate2_triggered_time = esp_timer_get_time();
-  bool inputState = digitalRead(INPUT_PIN);
-  digitalWrite(CONTROL_PIN, inputState);
+  bool inputState = digitalRead(INPUT_PIN2);
+  digitalWrite(CONTROL_PIN2, inputState);
   
 }
 
@@ -61,14 +64,17 @@ float differenceSeconds(int64_t start, int64_t end) {
 
 void setup() {
   // Initialize the TOGGLE_PIN as an output
-  pinMode(TOGGLE_PIN, OUTPUT);
+  pinMode(TOGGLE_PIN1, OUTPUT);
+  pinMode(TOGGLE_PIN2, OUTPUT);
   // Initialize the CONTROL_PIN as an output
-  pinMode(CONTROL_PIN, OUTPUT);
+  pinMode(CONTROL_PIN1, OUTPUT);
+  pinMode(CONTROL_PIN2, OUTPUT);
   // Initialize the INPUT_PIN as an input with pullup
-  pinMode(INPUT_PIN, INPUT_PULLUP);
-
+  pinMode(INPUT_PIN1, INPUT_PULLUP);
+  pinMode(INPUT_PIN2, INPUT_PULLUP);
   // Attach interrupt to handle button press
-  attachInterrupt(digitalPinToInterrupt(INPUT_PIN), handleButtonPress, CHANGE); // Use CHANGE to trigger on both press and release
+  attachInterrupt(digitalPinToInterrupt(INPUT_PIN1), handleGate1, CHANGE); // Use CHANGE to trigger on both press and release
+  attachInterrupt(digitalPinToInterrupt(INPUT_PIN2), handleGate2, CHANGE); // Use CHANGE to trigger on both press and release
 
   // Set up timer
   timer = timerBegin(0, 80, true); // Timer 0, prescaler 80, counting up
