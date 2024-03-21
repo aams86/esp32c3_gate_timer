@@ -1,12 +1,12 @@
 #include <esp_timer.h>  // Make sure to include this for esp_timer_get_time()
 #include <Arduino.h>
 
-#define TOGGLE_PIN1   D0  // Pin to toggle in ISR
-#define TOGGLE_PIN2   D1  // Pin to toggle in ISR
-#define CONTROL_PIN1   D9 // Pin to control based on button press
-#define CONTROL_PIN2   D8 // Pin to control based on button press
-#define INPUT_PIN1     D5   // Button input pin
-#define INPUT_PIN2     D6   // Button input pin
+#define TOGGLE_PIN1   0  // Pin to toggle in ISR
+#define TOGGLE_PIN2   1  // Pin to toggle in ISR
+#define CONTROL_PIN1   2 // Pin to control based on button press
+#define CONTROL_PIN2   3 // Pin to control based on button press
+#define INPUT_PIN1     7   // Button input pin
+#define INPUT_PIN2     6   // Button input pin
 
 
 typedef enum timer_state_t {
