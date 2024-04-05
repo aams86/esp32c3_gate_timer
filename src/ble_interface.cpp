@@ -10,6 +10,7 @@
 static BLECharacteristic* pCharacteristicTX;
 static BLECharacteristic* pCharacteristicRX;
 static BLECharacteristic* pCharacteristicNotifySpeed;
+static BLECharacteristic* pCharacteristicCompleteHardwareTest;
 
 static bool deviceConnected = false, sendMode = false, sendSize = true;
 static bool writeFile = false, request = false;
@@ -162,8 +163,9 @@ void init_ota_service(BLEServer *pServer) {
 }
 
 void init_speed_service(BLEServer *pServer) {
-  BLEService *pService = pServer->createService(SPEED_SERVICE_UUID);
-  pCharacteristicNotifySpeed = pService->createCharacteristic(NOTIFY_SPEED_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY );
+  BLEService *pService = pServer->createService(GATE_SPEED_SERVICE_UUID);
+  pCharacteristicNotifySpeed = pService->createCharacteristic(GATE_SPEED_NOTIFY_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY );
+  pCharacteristicCompleteHardwareTest = pService->createCharacteristic(GATE_CALIBRATE_TEST_START_UUID, BLECharacteristic::PROPERTY_WRITE );
 
   pCharacteristicNotifySpeed->setCallbacks(new MyCallbacks());
   pCharacteristicNotifySpeed->addDescriptor(new BLE2902());
@@ -175,10 +177,10 @@ void init_speed_service(BLEServer *pServer) {
 void initBLE() {
   pinMode(19, OUTPUT);
 
-  BLEDevice::init("GOLF_TIMER");
+  BLEDevice::init("Timer");
   BLEServer *pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
-
+/*
   BLEService *pService = pServer->createService(SERVICE_UUID);
   pCharacteristicTX = pService->createCharacteristic(CHARACTERISTIC_UUID_TX, BLECharacteristic::PROPERTY_NOTIFY );
   pCharacteristicRX = pService->createCharacteristic(CHARACTERISTIC_UUID_RX, BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_WRITE_NR);
@@ -187,17 +189,20 @@ void initBLE() {
   pCharacteristicTX->setCallbacks(new MyCallbacks());
   pCharacteristicTX->addDescriptor(new BLE2902());
   pCharacteristicTX->setNotifyProperty(true);
+  
   pService->start();
-  init_ota_service(pServer);
+  */
+  //init_ota_service(pServer);
   init_speed_service(pServer);
   BLEDevice::setMTU(DESIRED_MTU);
  
   // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(SERVICE_UUID);
+  pAdvertising->addServiceUUID(GATE_SPEED_SERVICE_UUID);
   pAdvertising->setScanResponse(true);
   pAdvertising->setMinPreferred(6);  // functions that help with iPhone connections issue
   pAdvertising->setMaxPreferred(12);
+
   start_advertising();
 }
 
@@ -223,9 +228,7 @@ void BLE_loop() {
   switch(BLE_STATE) {
     case BLE_ADVERTISING:
     current_time = millis();
-      if(current_time - adv_start > adv_length) {
-        stop_advertising();
-      } else if(current_time - last_toggle > toggle_length ) {
+      if(current_time - last_toggle > toggle_length ) {
           last_toggle = current_time;
           led_state = !led_state;
           digitalWrite(19, led_state);

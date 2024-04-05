@@ -4,6 +4,7 @@
 #include "hardware_test.h"
 #include "device_states.h"
 #include "utility_functions.h"
+#include "ble_interface.h"
 #include "config.h"
 
 void hardware_test_loop();
@@ -12,11 +13,14 @@ void device_control_loop();
 void setup() {
   Serial.begin(115200);
   init_gpio();
+  initBLE();
 }
 
 void loop() {
+  BLE_loop();
   //hardware_test_loop();
   device_control_loop();
+  delay(100);
 }
 
 static unsigned long device_ready_time = 0;
@@ -82,6 +86,7 @@ void device_control_loop() {
       Serial.print("speed: ");
       Serial.print(SENSOR_GAP_M / microSecondsToSeconds(current_measurement));
       Serial.println(" m/s");
+      notify_speed(SENSOR_GAP_M / microSecondsToSeconds(current_measurement));
       update_device_state(DEVICE_IDLE);
       break;
     case DEVICE_MEASUREMENT_INVALID:
@@ -96,7 +101,6 @@ void device_control_loop() {
       break;
 
   }
-  delay(100);
 }
 
 void hardware_test_loop() {
