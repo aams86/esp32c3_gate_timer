@@ -20,6 +20,8 @@ static int parts = 0, next = 0, cur = 0, MTU = 0;
 static int MODE = NORMAL_MODE;
 unsigned long rParts, tParts;
 
+static const int LED_INDICATOR_PIN = 5;
+
 void start_advertising();
 
 typedef enum ble_state_t {
@@ -33,7 +35,8 @@ ble_state_t BLE_STATE = BLE_IDLE;
 
 unsigned long adv_start;
 unsigned long adv_length = 60000;
-uint16_t toggle_length = 500;
+uint16_t toggle_length_on = 300;
+uint16_t toggle_length_off = 3000;
 
 void sendOtaResult(String result) {
   pCharacteristicTX->setValue(result.c_str());
@@ -57,7 +60,7 @@ class MyServerCallbacks: public BLEServerCallbacks {
       deviceConnected = true;
       BLE_STATE = BLE_CONNECTED;
       Serial.print("ble connected");
-      digitalWrite(19, HIGH);
+      digitalWrite(LED_INDICATOR_PIN, HIGH);
 
         // Request a change to the desired MTU upon connection
         pServer->getConnId(); // Get the connection ID if needed
@@ -68,7 +71,7 @@ class MyServerCallbacks: public BLEServerCallbacks {
       deviceConnected = false;
       Serial.print("ble disconnected");
       BLE_STATE = BLE_DISCONNECTED;
-      digitalWrite(19, LOW);
+      digitalWrite(LED_INDICATOR_PIN, LOW);
     }
 
     void onMTUChange(uint16_t mtu, uint16_t connId) {
@@ -175,7 +178,7 @@ void init_speed_service(BLEServer *pServer) {
 }
 
 void initBLE() {
-  pinMode(19, OUTPUT);
+  pinMode(LED_INDICATOR_PIN, OUTPUT);
 
   BLEDevice::init("Timer");
   BLEServer *pServer = BLEDevice::createServer();
@@ -217,22 +220,33 @@ void stop_advertising() {
   BLE_STATE = BLE_IDLE;
   Serial.println("advertising stop");
   BLEDevice::stopAdvertising();
-  digitalWrite(19, LOW);
+  digitalWrite(LED_INDICATOR_PIN, LOW);
+}
+
+
+void toggle_led() {
+  static bool led_state = false;
+  static unsigned long last_toggle = 0;
+  unsigned long current_time = millis();
+  if(led_state) {
+    if(current_time - last_toggle > toggle_length_on) {
+      last_toggle = current_time;
+      digitalWrite(LED_INDICATOR_PIN, led_state);
+      led_state = !led_state;
+    }
+  } else {
+    if(current_time - last_toggle > toggle_length_off) {
+      last_toggle = current_time;
+      digitalWrite(LED_INDICATOR_PIN, led_state);
+      led_state = !led_state;
+    }
+  }
 }
 
 void BLE_loop() {
-  static bool led_state = false;
-  static unsigned long last_toggle = 0;
-  unsigned long current_time = 0;
-
   switch(BLE_STATE) {
     case BLE_ADVERTISING:
-    current_time = millis();
-      if(current_time - last_toggle > toggle_length ) {
-          last_toggle = current_time;
-          led_state = !led_state;
-          digitalWrite(19, led_state);
-      }
+      toggle_led();
       break;
     case BLE_CONNECTED:
       break;
