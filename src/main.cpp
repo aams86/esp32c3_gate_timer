@@ -9,18 +9,39 @@
 
 void hardware_test_loop();
 void device_control_loop();
-
+void main_loop(void *arg);
 void setup() {
   Serial.begin(115200);
   init_gpio();
   initBLE();
+
+  // Create a task that runs on core 1
+  xTaskCreatePinnedToCore( main_loop,          // Task function
+                            "main_loop_task",  // Name of the task
+                            2000,              // Stack size of task
+                            NULL,              // Parameter of the task
+                            1,                 // Priority of the task
+                            NULL,              // Task handle
+                            1                  // Core where the task should run
+                          );
 }
 
 void loop() {
   BLE_loop();
+  delay(100);
+  /*
   //hardware_test_loop();
   device_control_loop();
   delay(100);
+  */
+}
+
+void main_loop(void *arg) {
+  //hardware_test_loop();
+  while(true) {
+    device_control_loop();
+    delay(100);
+  }
 }
 
 static unsigned long device_ready_time = 0;

@@ -201,8 +201,9 @@ void initBLE() {
  
   // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+
   pAdvertising->addServiceUUID(GATE_SPEED_SERVICE_UUID);
-  pAdvertising->setScanResponse(true);
+  //pAdvertising->setScanResponse(true);
   pAdvertising->setMinPreferred(6);  // functions that help with iPhone connections issue
   pAdvertising->setMaxPreferred(12);
 
