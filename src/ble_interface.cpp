@@ -210,6 +210,7 @@ void initBLE() {
   start_advertising();
 }
 
+
 void start_advertising() {
   adv_start = millis();
   Serial.println("advertising start");
