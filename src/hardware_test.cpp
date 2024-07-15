@@ -41,22 +41,30 @@ bool hardware_test() {
     reset_gate_triggers();
     ir_led_1_off();
     int64_t toggle_start1 = esp_timer_get_time();
-    delay(1);
+    delay(5);
     int64_t gate_time_1 = get_gate_1_time();
     int64_t diff_microseconds1 = differenceMicroseconds(toggle_start1, gate_time_1);
     if(get_gate_2_time() > 0) {
       Serial.println(" gate 2 triggered early");
       ir_led_2_on();
-      delay(1);
+      delay(5);
       reset_gate_triggers();
     }
     ir_led_2_off();
     int64_t toggle_start2 = esp_timer_get_time();
-    delay(1);
+    delay(5);
     int64_t gate_time_2 = get_gate_2_time();
     int64_t diff_microseconds2 = differenceMicroseconds(toggle_start2, gate_time_2);
     if(diff_microseconds1 < 0) {
       gate1_fail++;
+      // Serial.print("gate 1 negative delay: ");
+      // Serial.print(gate_time_1);
+      // Serial.print(" ");
+      // Serial.print(toggle_start1);
+      // Serial.print(" ");
+      // Serial.print(gate_time_2);
+      // Serial.print(" ");
+      // Serial.println(toggle_start2);
     } else if(diff_microseconds1 > 100) {
       gate1_long++;
       // Serial.print("gate 1 delayed response: ");
@@ -129,7 +137,7 @@ bool hardware_test() {
   ir_led_2_on();
   if(gate_1_data.sd > 2 || gate_1_data.n < 10 ||
      gate_2_data.sd > 2 || gate_2_data.n < 10 || 
-     gate_diffs.sd > 5) {
+     gate_diffs.sd > 10) {
       Serial.println("hardware test failed");
       return false;
   }
@@ -146,4 +154,49 @@ bool hardware_test() {
 
 int get_gate_offset() {
   return gate_time_diff_offset;
+}
+
+bool timer_test(uint16_t timeout_us) {
+  Serial.println("calibrating");
+  hardware_test();
+  //if(hardware_test()) {
+    ir_led_1_on();
+    ir_led_2_on();
+    delay(1);
+    reset_gate_triggers();
+    ir_led_1_off();
+    int64_t test_start = esp_timer_get_time();
+    delayMicroseconds(timeout_us);
+    ir_led_2_off();
+    int64_t test_end = esp_timer_get_time();
+    delay(1);
+  
+    int64_t gate_time_1 = get_gate_1_time();
+    int64_t gate_time_2 = get_gate_2_time();
+    int64_t diff_microseconds_actual = differenceMicroseconds(test_start, test_end);
+    int64_t diff_microseconds_measured = differenceMicroseconds(gate_time_1, gate_time_2);
+    Serial.print(gate_time_1);
+    Serial.print(" ");
+    Serial.println(gate_time_2);
+    Serial.print("timer test: ");
+    Serial.print(timeout_us/1000.0);
+    Serial.print(" ms  ");
+    Serial.print("actual time taken for test: ");
+    Serial.print(diff_microseconds_actual / 1000.0);
+    Serial.print(" ms ");
+    Serial.print(diff_microseconds_actual);
+    Serial.println(" us");
+    Serial.print("measured time (sensor response time): ");
+    Serial.print((diff_microseconds_measured - gate_time_diff_offset)/ 1000.0);
+    Serial.print("ms ");
+    Serial.print((diff_microseconds_measured - gate_time_diff_offset));
+    Serial.println(" us");
+
+    ir_led_1_on();
+    ir_led_2_on();
+    reset_gate_triggers();
+  //} else {
+  //  Serial.println("timer test hardware calibration failed");
+  //}
+  return false;
 }

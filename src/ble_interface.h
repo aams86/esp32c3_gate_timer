@@ -20,10 +20,10 @@
 #define BUILTINLED      2
 #define NORMAL_MODE   0   // normal
 #define UPDATE_MODE   1   // receiving firmware
-#define OTA_MODE      2   // installing firmware
 
 
-void sendOtaResult(String result);
+
+
 void initBLE();
 void BLE_loop();
 void notify_speed(float speed);

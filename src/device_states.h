@@ -11,7 +11,8 @@ typedef enum device_state_t {
   DEVICE_MEASUREMENT_COMPLETED,     //5
   DEVICE_MEASUREMENT_VALID,         //6
   DEVICE_MEASUREMENT_INVALID,       //7
-  DEVICE_MEASUREMENT_TIMEOUT        //8
+  DEVICE_MEASUREMENT_TIMEOUT,       //8
+  DEVICE_TIMER_TEST                 //9
 } device_state_t;
 
 typedef enum timer_state_t {

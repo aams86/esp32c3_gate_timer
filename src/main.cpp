@@ -9,7 +9,9 @@
 
 void hardware_test_loop();
 void device_control_loop();
+void test_loop(void *arg);
 void main_loop(void *arg);
+void parse_input();
 void setup() {
   Serial.begin(115200);
   init_gpio();
@@ -36,11 +38,33 @@ void loop() {
   */
 }
 
+void control_leds() {
+  digitalWrite(INDICATOR_LED_PIN1, digitalRead(INPUT_PIN1));
+  digitalWrite(INDICATOR_LED_PIN2, digitalRead(INPUT_PIN2));
+}
+
+
+void test_loop(void *arg) {
+
+  //digitalWrite(IR_LED_PIN2, HIGH);
+  digitalWrite(IR_LED_PIN1, HIGH);
+  while(true) {
+    Serial.print(digitalRead(INPUT_PIN1));
+    Serial.print(" ");
+    Serial.println(digitalRead(INPUT_PIN2));
+    control_leds();
+    delay(50);
+  }
+
+}
+
 void main_loop(void *arg) {
   //hardware_test_loop();
   while(true) {
     device_control_loop();
-    delay(100);
+    control_leds();
+    parse_input();
+    delay(50);
   }
 }
 
@@ -66,6 +90,9 @@ void device_control_loop() {
         Serial.println("device ready");
       }
       break;
+    case DEVICE_TIMER_TEST:
+      timer_test(1000);
+      update_device_state(DEVICE_READY);
     case DEVICE_READY:
       if(millis() - device_ready_time > DEVICE_READY_TIMEOUT) {
         update_device_state(DEVICE_IDLE);
@@ -129,4 +156,25 @@ void hardware_test_loop() {
     delay(100);
   }
   delay(5000);
+}
+
+void parse_input() {
+  if(Serial.available()) {
+    char dataIn = Serial.read();
+    //empty buffer
+    switch (dataIn) {
+      case 't':
+        Serial.println("received t");
+        update_device_state(DEVICE_TIMER_TEST);
+        break;
+      case 'h':
+        Serial.println("recieved h");
+        update_device_state(DEVICE_HARDWARE_TEST);
+        break;
+      default:
+        //Serial.println("invalid command: " + String(dataIn));
+        break;
+    }
+
+  }
 }

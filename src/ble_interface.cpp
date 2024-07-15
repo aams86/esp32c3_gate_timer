@@ -6,6 +6,7 @@
 #include <BLEServer.h>
 #include <BLE2902.h>
 
+#include "gpio_interface.h"
 
 static BLECharacteristic* pCharacteristicTX;
 static BLECharacteristic* pCharacteristicRX;
@@ -20,7 +21,7 @@ static int parts = 0, next = 0, cur = 0, MTU = 0;
 static int MODE = NORMAL_MODE;
 unsigned long rParts, tParts;
 
-static const int LED_INDICATOR_PIN = 5;
+
 
 void start_advertising();
 
@@ -35,15 +36,9 @@ ble_state_t BLE_STATE = BLE_IDLE;
 
 unsigned long adv_start;
 unsigned long adv_length = 60000;
-uint16_t toggle_length_on = 300;
+uint16_t toggle_length_on = 100;
 uint16_t toggle_length_off = 3000;
 
-void sendOtaResult(String result) {
-  pCharacteristicTX->setValue(result.c_str());
-  pCharacteristicTX->notify();
-  delay(200);
-
-}
 
 void notify_speed(float speed) {
   if(BLE_STATE == BLE_CONNECTED) {
@@ -129,7 +124,6 @@ class MyCallbacks: public BLECharacteristicCallbacks {
 
         // Compare this UUID with the UUIDs of known characteristics
         if (uuid.equals(BLEUUID(GATE_CALIBRATE_TEST_START_UUID))) {
-          //Serial.println("write to ota transfer uuid: ");
           //writeToUpdatePartition( pData, len);
             Serial.println("write to calibrate test start: ");
             Serial.println(pData[0]);
@@ -145,25 +139,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
     }
 };
 
-void init_ota_service(BLEServer *pServer) {
-/*  
-  BLEService *pService = pServer->createService(OTA_SERVICE_UUID);
-  pCharacteristicOTAControl = pService->createCharacteristic(CONTROL_OTA_UUID, BLECharacteristic::PROPERTY_WRITE );
-  pCharacteristicOTAHash = pService->createCharacteristic(OTA_HASH_UUID, BLECharacteristic::PROPERTY_WRITE );
-  pCharacteristicOTASize = pService->createCharacteristic(OTA_SIZE_UUID, BLECharacteristic::PROPERTY_WRITE );
-  pCharacteristicOTATransfer = pService->createCharacteristic(OTA_TRANSFER_UUID, BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_WRITE_NR);
-  pCharacteristicOTAStatus = pService->createCharacteristic(OTA_STATUS_UUID, BLECharacteristic::PROPERTY_NOTIFY );
 
-  pCharacteristicOTAControl->setCallbacks(new MyCallbacks());
-  pCharacteristicOTAHash->setCallbacks(new MyCallbacks());
-  pCharacteristicOTASize->setCallbacks(new MyCallbacks());
-  pCharacteristicOTATransfer->setCallbacks(new MyCallbacks());
-  pCharacteristicOTAStatus->setCallbacks(new MyCallbacks());
-  pCharacteristicOTAStatus->addDescriptor(new BLE2902());
-  pCharacteristicOTAStatus->setNotifyProperty(true);
-  pService->start();
-*/
-}
 
 void init_speed_service(BLEServer *pServer) {
   BLEService *pService = pServer->createService(GATE_SPEED_SERVICE_UUID);
@@ -195,7 +171,7 @@ void initBLE() {
   
   pService->start();
   */
-  //init_ota_service(pServer);
+
   init_speed_service(pServer);
   BLEDevice::setMTU(DESIRED_MTU);
  
@@ -231,16 +207,16 @@ void toggle_led() {
   static unsigned long last_toggle = 0;
   unsigned long current_time = millis();
   if(led_state) {
-    if(current_time - last_toggle > toggle_length_on) {
-      last_toggle = current_time;
-      digitalWrite(LED_INDICATOR_PIN, led_state);
-      led_state = !led_state;
-    }
-  } else {
     if(current_time - last_toggle > toggle_length_off) {
       last_toggle = current_time;
-      digitalWrite(LED_INDICATOR_PIN, led_state);
-      led_state = !led_state;
+      digitalWrite(LED_INDICATOR_PIN, true);
+      led_state = false;
+    }
+  } else {
+    if(current_time - last_toggle > toggle_length_on) {
+      last_toggle = current_time;
+      digitalWrite(LED_INDICATOR_PIN, false);
+      led_state = true;
     }
   }
 }

@@ -3,12 +3,25 @@
 
 #include "Arduino.h"
 
+#define DEV_BOARD
+
+#ifdef DEV_BOARD
 #define INDICATOR_LED_PIN1   2  // Pin to toggle in ISR
 #define INDICATOR_LED_PIN2   3  // Pin to toggle in ISR
 #define IR_LED_PIN1    0 // Pin to control based on button press
 #define IR_LED_PIN2    1 // Pin to control based on button press
+#define INPUT_PIN1     7   // Button input pin
+#define INPUT_PIN2     6   // Button input pin
+#define LED_INDICATOR_PIN 5
+#else
+#define INDICATOR_LED_PIN1   0  // Pin to toggle in ISR
+#define INDICATOR_LED_PIN2   1  // Pin to toggle in ISR
+#define IR_LED_PIN1    2 // Pin to control based on button press
+#define IR_LED_PIN2    3 // Pin to control based on button press
 #define INPUT_PIN1     6   // Button input pin
 #define INPUT_PIN2     7   // Button input pin
+#define LED_INDICATOR_PIN 19
+#endif
 
 void init_gpio(void);
 

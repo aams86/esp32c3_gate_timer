@@ -93,7 +93,7 @@ void IRAM_ATTR handleGate2() {
   // Directly set CONTROL_PIN to match the INPUT_PIN state
   gate2_triggered_time = esp_timer_get_time();
   bool inputState = digitalRead(INPUT_PIN2);
-  digitalWrite(INDICATOR_LED_PIN2, inputState);
+
   disable_gate_2_interrupt();
 }
 
